@@ -1,14 +1,13 @@
 name: zxing_lib
 description: A Dart port of zxing that encode and decode multiple 1D/2D barcodes, Supported qrcode, pdf417, oned, maxicode, datamatrix, aztec.
 version: 0.9.0
-homepage: https://shirne.github.io/
-repository: https://github.com/shirne/zxing-dart
+publish_to: 'none' # Prevent to publish to pub.dev
 
 environment:
   sdk: ">=2.19.0 <4.0.0"
 
 dependencies:
-  intl: ^0.18.0
+  intl: ^0.17.0
   charset: ^1.1.1
 
 dev_dependencies:
@@ -17,7 +16,3 @@ dev_dependencies:
   lints: ^2.0.0
   image: ^3.1.3
   collection: ^1.16.0
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
