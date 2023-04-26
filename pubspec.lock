@@ -52,10 +52,11 @@ packages:
   charset:
     dependency: "direct main"
     description:
-      name: charset
-      sha256: e8346cf597b6cea278d2d3a29b2d01ed8fb325aad718e70f22b0cb653cb31700
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: cf5b300ddab048c9c8ecf60b61d3b62c4b8045fd
+      url: "https://github.com/llfbandit/charset-dart.git"
+    source: git
     version: "1.2.0"
   clock:
     dependency: transitive

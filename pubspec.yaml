@@ -8,7 +8,10 @@ environment:
 
 dependencies:
   intl: ^0.17.0
-  charset: ^1.1.1
+  # Charset encoding/decoding (https://pub.dev/packages/charset)
+  charset:
+    git:
+      url: https://github.com/llfbandit/charset-dart.git
 
 dev_dependencies:
   test:
