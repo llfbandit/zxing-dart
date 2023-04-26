@@ -12,6 +12,7 @@ dependencies:
   charset:
     git:
       url: https://github.com/llfbandit/charset-dart.git
+      ref: cf5b300d
 
 dev_dependencies:
   test:

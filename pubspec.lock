@@ -53,7 +53,7 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
+      ref: cf5b300d
       resolved-ref: cf5b300ddab048c9c8ecf60b61d3b62c4b8045fd
       url: "https://github.com/llfbandit/charset-dart.git"
     source: git
