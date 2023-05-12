@@ -7,7 +7,7 @@ environment:
   sdk: ">=2.19.0 <4.0.0"
 
 dependencies:
-  intl: ^0.17.0
+  intl: ^0.18.0
   # Charset encoding/decoding (https://pub.dev/packages/charset)
   charset:
     git:
