@@ -29,11 +29,6 @@ import 'character_set_eci.dart';
 class StringUtils {
   static final Encoding _platformDefaultEncoding = utf8;
   static final Encoding shiftJisCharset = shiftJis;
-  static final Encoding gbkCharset = gbk;
-  static final Encoding eucJpEncoding = eucJp;
-  static final bool _assumeShiftJis =
-      shiftJisCharset == _platformDefaultEncoding ||
-          eucJpEncoding == _platformDefaultEncoding;
 
   // Retained for ABI compatibility with earlier versions
   static final shiftJisEncoding = 'SJIS';
@@ -216,8 +211,7 @@ class StringUtils {
     }
     // Easy -- if assuming Shift_JIS or >= 3 valid consecutive not-ascii characters (and no evidence it can't be), done
     if (canBeShiftJIS &&
-        (_assumeShiftJis ||
-            sjisMaxKatakanaWordLength >= 3 ||
+        (            sjisMaxKatakanaWordLength >= 3 ||
             sjisMaxDoubleBytesWordLength >= 3)) {
       return shiftJisCharset;
     }

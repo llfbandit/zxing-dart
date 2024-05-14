@@ -38,7 +38,7 @@ class DecodedBitStreamParser {
   /// See ISO 18004:2006, 6.4.4 Table 5
   static final _alphaNumericChars =
       r'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'.split('');
-  static final _gbkSubset = 1;
+  // static final _gbkSubset = 1;
 
   DecodedBitStreamParser._();
 
@@ -100,16 +100,16 @@ class DecodedBitStreamParser {
               throw FormatsException('CharacterSet is null');
             }
             break;
-          case Mode.hanzi:
-            // First handle Hanzi mode which does not start with character count
-            // Chinese mode contains a sub set indicator right after mode indicator
-            final subset = bits.readBits(4);
-            final countHanzi =
-                bits.readBits(mode.getCharacterCountBits(version));
-            if (subset == _gbkSubset) {
-              _decodeHanziSegment(bits, result, countHanzi);
-            }
-            break;
+          // case Mode.hanzi:
+          //   // First handle Hanzi mode which does not start with character count
+          //   // Chinese mode contains a sub set indicator right after mode indicator
+          //   final subset = bits.readBits(4);
+          //   final countHanzi =
+          //       bits.readBits(mode.getCharacterCountBits(version));
+          //   if (subset == _gbkSubset) {
+          //     _decodeHanziSegment(bits, result, countHanzi);
+          //   }
+          //   break;
           default:
             // "Normal" QR code modes:
             // How many characters will follow, encoded in this mode?
@@ -176,40 +176,40 @@ class DecodedBitStreamParser {
   }
 
   /// See specification GBT 18284-2000
-  static void _decodeHanziSegment(
-    BitSource bits,
-    StringBuffer result,
-    int count,
-  ) {
-    // Don't crash trying to read more bits than we have available.
-    if (count * 13 > bits.available()) {
-      throw FormatsException.instance;
-    }
+  // static void _decodeHanziSegment(
+  //   BitSource bits,
+  //   StringBuffer result,
+  //   int count,
+  // ) {
+  //   // Don't crash trying to read more bits than we have available.
+  //   if (count * 13 > bits.available()) {
+  //     throw FormatsException.instance;
+  //   }
 
-    // Each character will require 2 bytes. Read the characters as 2-byte pairs
-    // and decode as GB2312 afterwards
-    final buffer = Uint8List(2 * count);
-    int offset = 0;
-    while (count > 0) {
-      // Each 13 bits encodes a 2-byte character
-      final twoBytes = bits.readBits(13);
-      int assembledTwoBytes =
-          (((twoBytes ~/ 0x060) << 8) & 0xFFFFFFFF) | (twoBytes % 0x060);
-      if (assembledTwoBytes < 0x00A00) {
-        // In the 0xA1A1 to 0xAAFE range
-        assembledTwoBytes += 0x0A1A1;
-      } else {
-        // In the 0xB0A1 to 0xFAFE range
-        assembledTwoBytes += 0x0A6A1;
-      }
-      buffer[offset] = ((assembledTwoBytes >> 8) & 0xFF);
-      buffer[offset + 1] = (assembledTwoBytes & 0xFF);
-      offset += 2;
-      count--;
-    }
+  //   // Each character will require 2 bytes. Read the characters as 2-byte pairs
+  //   // and decode as GB2312 afterwards
+  //   final buffer = Uint8List(2 * count);
+  //   int offset = 0;
+  //   while (count > 0) {
+  //     // Each 13 bits encodes a 2-byte character
+  //     final twoBytes = bits.readBits(13);
+  //     int assembledTwoBytes =
+  //         (((twoBytes ~/ 0x060) << 8) & 0xFFFFFFFF) | (twoBytes % 0x060);
+  //     if (assembledTwoBytes < 0x00A00) {
+  //       // In the 0xA1A1 to 0xAAFE range
+  //       assembledTwoBytes += 0x0A1A1;
+  //     } else {
+  //       // In the 0xB0A1 to 0xFAFE range
+  //       assembledTwoBytes += 0x0A6A1;
+  //     }
+  //     buffer[offset] = ((assembledTwoBytes >> 8) & 0xFF);
+  //     buffer[offset + 1] = (assembledTwoBytes & 0xFF);
+  //     offset += 2;
+  //     count--;
+  //   }
 
-    result.write(StringUtils.gbkCharset.decode(buffer));
-  }
+  //   result.write(StringUtils.gbkCharset.decode(buffer));
+  // }
 
   static void _decodeKanjiSegment(
     BitSource bits,
