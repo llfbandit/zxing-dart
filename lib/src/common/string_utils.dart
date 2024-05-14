@@ -19,7 +19,7 @@ import 'dart:typed_data';
 
 import 'package:charset/charset.dart';
 
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import 'character_set_eci.dart';
 
 /// Common string-related functions.
@@ -27,12 +27,12 @@ import 'character_set_eci.dart';
 /// @author Sean Owen
 /// @author Alex Dupre
 class StringUtils {
-  static const Encoding _platformDefaultEncoding = utf8;
-  static const Encoding shiftJisCharset = shiftJis;
+  static final Encoding _platformDefaultEncoding = utf8;
+  static final Encoding shiftJisCharset = shiftJis;
 
   // Retained for ABI compatibility with earlier versions
-  static const shiftJisEncoding = 'SJIS';
-  static const gbkName = 'GB2312';
+  static final shiftJisEncoding = 'SJIS';
+  static final gbkName = 'GB2312';
 
   StringUtils._();
 
@@ -43,7 +43,7 @@ class StringUtils {
   ///  of these can possibly be correct
   static String guessEncoding(
     Uint8List bytes,
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ) {
     final c = guessCharset(bytes, hints);
     if (c?.name == shiftJisCharset.name) {
@@ -79,11 +79,11 @@ class StringUtils {
   ///  none of these can possibly be correct
   static Encoding? guessCharset(
     Uint8List bytes,
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ) {
-    if (hints != null && hints.containsKey(DecodeHintType.characterSet)) {
+    if (hints?.characterSet != null) {
       return CharacterSetECI.getCharacterSetECIByName(
-        hints[DecodeHintType.characterSet].toString(),
+        hints!.characterSet!,
       )?.charset;
     }
 
@@ -211,7 +211,8 @@ class StringUtils {
     }
     // Easy -- if assuming Shift_JIS or >= 3 valid consecutive not-ascii characters (and no evidence it can't be), done
     if (canBeShiftJIS &&
-        (sjisMaxKatakanaWordLength >= 3 || sjisMaxDoubleBytesWordLength >= 3)) {
+        (            sjisMaxKatakanaWordLength >= 3 ||
+            sjisMaxDoubleBytesWordLength >= 3)) {
       return shiftJisCharset;
     }
     // Distinguishing Shift_JIS and ISO-8859-1 can be a little tough for short words. The crude heuristic is:

@@ -30,12 +30,12 @@ class AbstractBlackBoxTestCase {
   static final Logger _log = Logger.getLogger(AbstractBlackBoxTestCase);
 
   final RegExp imageSuffix = RegExp(r'\.(jpe?g|gif|png)$');
-  final Directory _testBase;
+  final Directory testBase;
   final Reader? _barcodeReader;
   final BarcodeFormat? _expectedFormat;
   final List<TestResult> _testResults = [];
-  final Map<DecodeHintType, Object> _hints = {};
-  final Image Function(Image, String)? _imageProcess;
+  final DecodeHint hints;
+  final Image Function(Image, String)? imageProcess;
 
   static Directory buildTestBase(String testBasePathSuffix) {
     // A little workaround to prevent aggravation in my IDE
@@ -47,17 +47,10 @@ class AbstractBlackBoxTestCase {
   AbstractBlackBoxTestCase(
     String testBasePathSuffix,
     this._barcodeReader,
-    this._expectedFormat, [
-    this._imageProcess,
-  ]) : _testBase = buildTestBase(testBasePathSuffix);
-
-  Directory getTestBase() {
-    return _testBase;
-  }
-
-  void addHint(DecodeHintType hint) {
-    _hints[hint] = true;
-  }
+    this._expectedFormat, {
+    this.imageProcess,
+    this.hints = const DecodeHint(),
+  }) : testBase = buildTestBase(testBasePathSuffix);
 
   void testBlackBox() {
     assert(_testResults.isNotEmpty);
@@ -74,28 +67,33 @@ class AbstractBlackBoxTestCase {
       _log.info('Starting ${testImage.path}');
 
       Image image = decodeImage(testImage.readAsBytesSync())!;
-      if (_imageProcess != null) {
-        image = _imageProcess!.call(image, testImage.absolute.path);
+      if (imageProcess != null) {
+        image = imageProcess!.call(image, testImage.absolute.path);
       }
 
       final testImageFileName = testImage.uri.pathSegments.last;
-      final fileBaseName =
-          testImageFileName.substring(0, testImageFileName.indexOf('.'));
-      File expectedTextFile = File('${_testBase.path}/$fileBaseName.txt');
+      final fileBaseName = testImageFileName.substring(
+        0,
+        testImageFileName.indexOf('.'),
+      );
+      File expectedTextFile = File('${testBase.path}/$fileBaseName.txt');
       String expectedText;
       if (expectedTextFile.existsSync()) {
         expectedText = expectedTextFile.readAsStringSync();
       } else {
-        expectedTextFile = File('${_testBase.path}/$fileBaseName.bin');
+        expectedTextFile = File('${testBase.path}/$fileBaseName.bin');
         assert(expectedTextFile.existsSync());
         expectedText = expectedTextFile.readAsStringSync(encoding: latin1);
       }
 
       final expectedMetadataFile =
-          File('${_testBase.path}/$fileBaseName.metadata.txt');
+          File('${testBase.path}/$fileBaseName.metadata.txt');
       final expectedMetadata = Properties();
       if (expectedMetadataFile.existsSync()) {
         expectedMetadata.load(expectedMetadataFile.readAsStringSync());
+
+        correctInteger(expectedMetadata, ResultMetadataType.errorsCorrected);
+        correctInteger(expectedMetadata, ResultMetadataType.erasuresCorrected);
       }
 
       for (int x = 0; x < testCount; x++) {
@@ -190,15 +188,15 @@ class AbstractBlackBoxTestCase {
     // Then run through again and assert if any failed
     for (int x = 0; x < testCount; x++) {
       final testResult = _testResults[x];
-      String label =
-          'Rotation ${testResult.rotation} degrees: Too many images failed';
+      String label = 'Rotation ${testResult.rotation} degrees: '
+          'Too many images failed(${passedCounts[x]}/${testResult.mustPassCount})';
       assert(passedCounts[x] >= testResult.mustPassCount, label);
       assert(
         tryHarderCounts[x] >= testResult.tryHarderCount,
         'Try harder, $label',
       );
-      label =
-          'Rotation ${testResult.rotation} degrees: Too many images misread';
+      label = 'Rotation ${testResult.rotation} degrees: '
+          'Too many images misread(${passedCounts[x]}/${testResult.mustPassCount})';
       assert(misreadCounts[x] <= testResult.maxMisreads, label);
       assert(
         tryHarderMisreadCounts[x] <= testResult.maxTryHarderMisreads,
@@ -235,11 +233,11 @@ class AbstractBlackBoxTestCase {
 
   List<File> getImageFiles() {
     assert(
-      _testBase.existsSync(),
+      testBase.existsSync(),
       "Please download and install test images, and run from the 'test' directory",
     );
     final paths = <File>[];
-    final files = _testBase.listSync();
+    final files = testBase.listSync();
     for (var element in files) {
       if (element is File && imageSuffix.hasMatch(element.path)) {
         // "*.{jpg,jpeg,gif,png,JPG,JPEG,GIF,PNG}"
@@ -250,31 +248,42 @@ class AbstractBlackBoxTestCase {
     return paths;
   }
 
+  void correctInteger(Properties metadata, ResultMetadataType key) {
+    final skey = key.identifier;
+    if (metadata.properties.containsKey(skey)) {
+      final sval = metadata.getProperty(skey) ?? '';
+      final ival = int.tryParse(sval) ?? 0;
+      metadata.setProperty(skey, ival);
+    }
+  }
+
   Reader? get reader => _barcodeReader;
 
   bool _decode(
     BinaryBitmap source,
     double rotation,
     String expectedText,
-    Map<Object, Object> expectedMetadata, {
+    Map<Object, dynamic> expectedMetadata, {
     bool tryHarder = false,
-    filename = '',
+    String filename = '',
   }) {
     final suffix = " (${tryHarder ? 'try harder, ' : ''}rotation: $rotation)";
 
-    final hints = Map<DecodeHintType, Object>.from(_hints);
-    if (tryHarder) {
-      hints[DecodeHintType.tryHarder] = true;
-      hints[DecodeHintType.alsoInverted] = true;
-    }
+    final hints = tryHarder
+        ? this.hints.copyWith(
+              tryHarder: true,
+              alsoInverted: true,
+            )
+        : this.hints;
 
     // Try in 'pure' mode mostly to exercise PURE_BARCODE code paths for exceptions;
     // not expected to pass, generally
     Result? result;
     try {
-      final pureHints = Map<DecodeHintType, Object>.from(hints);
-      pureHints[DecodeHintType.pureBarcode] = true;
-      result = _barcodeReader!.decode(source, pureHints);
+      result = _barcodeReader!.decode(
+        source,
+        hints.copyWith(pureBarcode: true),
+      );
     } on ReaderException catch (_) {
       // continue
     }
@@ -283,7 +292,8 @@ class AbstractBlackBoxTestCase {
 
     if (_expectedFormat != result.barcodeFormat) {
       _log.warning(
-        "Format mismatch: $filename expected '$_expectedFormat' but got '${result.barcodeFormat}'$suffix",
+        "Format mismatch: $filename expected '$_expectedFormat'"
+        " but got '${result.barcodeFormat}'$suffix",
       );
       return false;
     }
@@ -291,7 +301,8 @@ class AbstractBlackBoxTestCase {
     final resultText = result.text;
     if (expectedText != resultText) {
       _log.warning(
-        "Content mismatch: $filename expected '$expectedText' but got '$resultText'$suffix",
+        "Content mismatch: $filename expected '$expectedText'"
+        " but got '$resultText'$suffix",
       );
       return false;
     }
@@ -335,29 +346,10 @@ class AbstractBlackBoxTestCase {
       return original;
     }
 
-    //double radians = Math.pi * 2 * (degrees / 360);
-
-    // Transform simply to find out the new bounding box (don't actually run the image through it)
-    //AffineTransform at = AffineTransform();
-    //at.rotate(radians, original.width / 2.0, original.height / 2.0);
-    //BufferedImageOp op = AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
-
-    //original.rotate(radians);
-
-    //RectangularShape r = op.getBounds2D(original);
-    //int width = (int) Math.ceil(r.width);
-    //int height = (int) Math.ceil(r.height);
-
-    // Real transform, now that we know the size of the new image and how to translate after we rotate
-    // to keep it centered
-    //at = AffineTransform();
-    //at.rotate(radians, width / 2.0, height / 2.0);
-    //at.translate((width - original.width) / 2.0,
-    //             (height - original.height) / 2.0);
-    //op = AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
-
-    //return op.filter(original, BufferedImage(width, height, original.getType()));
-
-    return copyRotate(original, degrees, interpolation: Interpolation.linear);
+    return copyRotate(
+      original,
+      angle: degrees,
+      interpolation: Interpolation.linear,
+    );
   }
 }

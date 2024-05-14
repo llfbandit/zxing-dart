@@ -16,7 +16,7 @@
 
 import '../barcode_format.dart';
 import '../common/detector/math_utils.dart';
-import '../encode_hint_type.dart';
+import '../encode_hint.dart';
 import 'code128_reader.dart';
 import 'one_dimensional_code_writer.dart';
 
@@ -318,31 +318,22 @@ class Code128Writer extends OneDimensionalCodeWriter {
   @override
   List<bool> encodeContent(
     String contents, [
-    Map<EncodeHintType, Object?>? hints,
+    EncodeHint? hints,
   ]) {
     final forcedCodeSet = _check(contents, hints);
 
-    final hasCompactionHint = hints != null &&
-        hints.containsKey(EncodeHintType.code128Compact) &&
-        (hints[EncodeHintType.code128Compact] as bool);
+    final hasCompactionHint = hints?.code128Compact ?? false;
 
     return hasCompactionHint
         ? MinimalEncoder().encode(contents)
         : encodeFast(contents, hints, forcedCodeSet);
   }
 
-  static int _check(String contents, Map<EncodeHintType, Object?>? hints) {
-    final length = contents.length;
-    // Check length
-    if (length < 1 || length > 80) {
-      throw ArgumentError(
-          'Contents length should be between 1 and 80 characters,'
-          ' but got $length');
-    }
+  static int _check(String contents, EncodeHint? hints) {
     // Check for forced code set hint.
     int forcedCodeSet = -1;
-    if (hints != null && hints.containsKey(EncodeHintType.forceCodeSet)) {
-      final codeSetHint = hints[EncodeHintType.forceCodeSet] as String;
+    if (hints?.forceCodeSet != null) {
+      final codeSetHint = hints!.forceCodeSet!;
       switch (codeSetHint) {
         case 'A':
           forcedCodeSet = _codeCodeA;
@@ -359,7 +350,7 @@ class Code128Writer extends OneDimensionalCodeWriter {
     }
 
     // Check content
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < contents.length; i++) {
       final c = contents.codeUnitAt(i);
       // check for non ascii characters that are not special GS1 characters
       switch (c) {
@@ -388,7 +379,7 @@ class Code128Writer extends OneDimensionalCodeWriter {
           break;
         case _codeCodeB:
           // allows no ascii below 32 (terminal symbols)
-          if (c <= 32) {
+          if (c < 32) {
             throw ArgumentError('Bad character in input for forced code set B:'
                 ' ASCII value=$c');
           }
@@ -411,7 +402,7 @@ class Code128Writer extends OneDimensionalCodeWriter {
 
   static List<bool> encodeFast(
     String contents,
-    Map<EncodeHintType, Object?>? hints,
+    EncodeHint? hints,
     int forcedCodeSet,
   ) {
     final length = contents.length;
@@ -517,6 +508,9 @@ class Code128Writer extends OneDimensionalCodeWriter {
   static List<bool> produceResult(List<List<int>> patterns, int checkSum) {
     // Compute and append checksum
     checkSum %= 103;
+    if (checkSum < 0) {
+      throw ArgumentError('Unable to compute a valid input checksum');
+    }
     patterns.add(Code128Reader.codePatterns[checkSum]);
 
     // Append stop code

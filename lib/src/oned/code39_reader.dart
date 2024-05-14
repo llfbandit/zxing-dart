@@ -21,7 +21,7 @@ import '../checksum_exception.dart';
 import '../common/bit_array.dart';
 import '../common/detector/math_utils.dart';
 import '../common/string_builder.dart';
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import '../formats_exception.dart';
 import '../not_found_exception.dart';
 import '../result.dart';
@@ -46,7 +46,7 @@ class Code39Reader extends OneDReader {
     0x109, 0x049, 0x148, 0x019, 0x118, 0x058, 0x00D, 0x10C, 0x04C, 0x01C, // A-J
     0x103, 0x043, 0x142, 0x013, 0x112, 0x052, 0x007, 0x106, 0x046, 0x016, // K-T
     0x181, 0x0C1, 0x1C0, 0x091, 0x190, 0x0D0, 0x085, 0x184, 0x0C4, 0x0A8, // U-$
-    0x0A2, 0x08A, 0x02A // /-%
+    0x0A2, 0x08A, 0x02A, // /-%
   ];
 
   static const int asteriskEncoding = 0x094;
@@ -72,7 +72,7 @@ class Code39Reader extends OneDReader {
   Result decodeRow(
     int rowNumber,
     BitArray row,
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ) {
     final theCounters = _counters;
     theCounters.fillRange(0, theCounters.length, 0);
@@ -148,7 +148,7 @@ class Code39Reader extends OneDReader {
       null,
       [
         ResultPoint(left, rowNumber.toDouble()),
-        ResultPoint(right, rowNumber.toDouble())
+        ResultPoint(right, rowNumber.toDouble()),
       ],
       BarcodeFormat.code39,
     );

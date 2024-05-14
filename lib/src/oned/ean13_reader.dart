@@ -18,7 +18,7 @@ import '../barcode_format.dart';
 import '../common/bit_array.dart';
 import '../common/string_builder.dart';
 import '../not_found_exception.dart';
-import 'upceanreader.dart';
+import 'upcean_reader.dart';
 
 /// Implements decoding of the EAN-13 format.
 ///
@@ -56,7 +56,7 @@ class EAN13Reader extends UPCEANReader {
   //                0    1    1   0   0    1   == 0x19
   //
   static const firstDigitEncodings = [
-    0x00, 0x0B, 0x0D, 0xE, 0x13, 0x19, 0x1C, 0x15, 0x16, 0x1A //
+    0x00, 0x0B, 0x0D, 0xE, 0x13, 0x19, 0x1C, 0x15, 0x16, 0x1A, //
   ];
 
   final _decodeMiddleCounters = [0, 0, 0, 0];

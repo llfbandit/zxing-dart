@@ -41,10 +41,9 @@ class GlobalHistogramBinarizer extends Binarizer {
   Uint8List _luminances;
   final List<int> _buckets;
 
-  GlobalHistogramBinarizer(LuminanceSource source)
+  GlobalHistogramBinarizer(super.source)
       : _luminances = _empty,
-        _buckets = List.filled(_luminanceBuckets, 0),
-        super(source);
+        _buckets = List.filled(_luminanceBuckets, 0);
 
   // Applies simple sharpening to the row data to improve performance of the 1D Readers.
   @override
@@ -138,9 +137,6 @@ class GlobalHistogramBinarizer extends Binarizer {
       _luminances = Uint8List(luminanceSize);
     }
     _buckets.fillRange(0, _luminanceBuckets, 0);
-    /*for (int x = 0; x < _luminanceBuckets; x++) {
-      _buckets[x] = 0;
-    }*/
   }
 
   static int _estimateBlackPoint(List<int> buckets) {

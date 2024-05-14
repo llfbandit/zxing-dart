@@ -17,14 +17,12 @@
 import 'dart:core';
 import 'dart:math' as math;
 
-import '../../../common/bit_matrix.dart';
-import '../../../decode_hint_type.dart';
+import '../../../decode_hint.dart';
 import '../../../not_found_exception.dart';
 import '../../../qrcode/detector/finder_pattern.dart';
 import '../../../qrcode/detector/finder_pattern_finder.dart';
 import '../../../qrcode/detector/finder_pattern_info.dart';
 import '../../../result_point.dart';
-import '../../../result_point_callback.dart';
 
 /// This class attempts to find finder patterns in a QR Code. Finder patterns are the square
 /// markers at three corners of a QR Code.
@@ -62,9 +60,9 @@ class MultiFinderPatternFinder extends FinderPatternFinder {
   static const double _diffModsizeCutoff = 0.5;
 
   MultiFinderPatternFinder(
-    BitMatrix image,
-    ResultPointCallback? resultPointCallback,
-  ) : super(image, resultPointCallback);
+    super.image,
+    super.resultPointCallback,
+  );
 
   int _compare(FinderPattern? center1, FinderPattern? center2) {
     if (center1 == null) return center2 == null ? 0 : -1;
@@ -207,9 +205,8 @@ class MultiFinderPatternFinder extends FinderPatternFinder {
     throw NotFoundException.instance;
   }
 
-  List<FinderPatternInfo> findMulti(Map<DecodeHintType, Object>? hints) {
-    final tryHarder =
-        hints != null && hints.containsKey(DecodeHintType.tryHarder);
+  List<FinderPatternInfo> findMulti(DecodeHint? hints) {
+    final tryHarder = hints?.tryHarder ?? false;
     final maxI = image.height;
     final maxJ = image.width;
     // We are looking for black/white/black/white/black modules in

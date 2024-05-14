@@ -19,7 +19,7 @@ import 'dart:math' as math;
 import '../barcode_format.dart';
 import '../binary_bitmap.dart';
 import '../common/bit_matrix.dart';
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import '../not_found_exception.dart';
 import '../reader.dart';
 import '../result.dart';
@@ -36,7 +36,7 @@ class MaxiCodeReader implements Reader {
   final Decoder _decoder = Decoder();
 
   @override
-  Result decode(BinaryBitmap image, [Map<DecodeHintType, Object>? hints]) {
+  Result decode(BinaryBitmap image, [DecodeHint? hints]) {
     // Note that MaxiCode reader effectively always assumes PURE_BARCODE mode
     // and can't detect it in an image
     final bits = _extractPureBits(image.blackMatrix);
@@ -48,6 +48,10 @@ class MaxiCodeReader implements Reader {
       BarcodeFormat.maxicode,
     );
 
+    result.putMetadata(
+      ResultMetadataType.errorsCorrected,
+      decoderResult.errorsCorrected ?? 0,
+    );
     final ecLevel = decoderResult.ecLevel;
     if (ecLevel != null) {
       result.putMetadata(ResultMetadataType.errorCorrectionLevel, ecLevel);
@@ -78,10 +82,11 @@ class MaxiCodeReader implements Reader {
     // Now just read off the bits
     final bits = BitMatrix(_matrixWidth, _matrixHeight);
     for (int y = 0; y < _matrixHeight; y++) {
-      final iy = math.min(
-        top + (y * height + height ~/ 2) ~/ _matrixHeight,
-        height - 1,
-      );
+      final iy = top +
+          math.min<int>(
+            (y * height + height ~/ 2) ~/ _matrixHeight,
+            height - 1,
+          );
       for (int x = 0; x < _matrixWidth; x++) {
         // srowen: I don't quite understand why the formula below is necessary, but it
         // can walk off the image if left + width = the right boundary. So cap it.

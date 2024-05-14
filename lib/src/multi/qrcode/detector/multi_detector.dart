@@ -15,13 +15,11 @@
  */
 
 import '../../../qrcode/detector/finder_pattern_info.dart';
-import '../../../common/bit_matrix.dart';
 import '../../../common/detector_result.dart';
-import '../../../decode_hint_type.dart';
+import '../../../decode_hint.dart';
 import '../../../not_found_exception.dart';
 import '../../../qrcode/detector/detector.dart';
 import '../../../reader_exception.dart';
-import '../../../result_point_callback.dart';
 import 'multi_finder_pattern_finder.dart';
 
 /// Encapsulates logic that can detect one or more QR Codes in an image, even if the QR Code
@@ -32,12 +30,13 @@ import 'multi_finder_pattern_finder.dart';
 class MultiDetector extends Detector {
   static const _emptyDetectorResults = <DetectorResult>[];
 
-  MultiDetector(BitMatrix image) : super(image);
+  MultiDetector(super.image);
 
-  List<DetectorResult> detectMulti(Map<DecodeHintType, Object>? hints) {
-    final resultPointCallback =
-        hints?[DecodeHintType.needResultPointCallback] as ResultPointCallback?;
-    final finder = MultiFinderPatternFinder(image, resultPointCallback);
+  List<DetectorResult> detectMulti(DecodeHint? hints) {
+    final finder = MultiFinderPatternFinder(
+      image,
+      hints?.needResultPointCallback,
+    );
     final infos = finder.findMulti(hints);
 
     if (infos.isEmpty) {

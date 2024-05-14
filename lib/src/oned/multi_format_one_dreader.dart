@@ -17,7 +17,7 @@
 import '../common/bit_array.dart';
 
 import '../barcode_format.dart';
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import '../not_found_exception.dart';
 import '../reader.dart';
 import '../reader_exception.dart';
@@ -26,10 +26,10 @@ import 'coda_bar_reader.dart';
 import 'code128_reader.dart';
 import 'code39_reader.dart';
 import 'code93_reader.dart';
-import 'itfreader.dart';
+import 'itf_reader.dart';
 import 'multi_format_upceanreader.dart';
 import 'one_dreader.dart';
-import 'rss/expanded/rssexpanded_reader.dart';
+import 'rss/expanded/rss_expanded_reader.dart';
 import 'rss/rss14_reader.dart';
 
 /// @author dswitkin@google.com (Daniel Switkin)
@@ -39,12 +39,10 @@ class MultiFormatOneDReader extends OneDReader {
 
   late List<OneDReader> _readers;
 
-  MultiFormatOneDReader(Map<DecodeHintType, Object>? hints) {
+  MultiFormatOneDReader(DecodeHint? hints) {
     // @SuppressWarnings("unchecked")
-    final possibleFormats =
-        hints?[DecodeHintType.possibleFormats] as List<BarcodeFormat>?;
-    final useCode39CheckDigit =
-        hints != null && hints[DecodeHintType.assumeCode39CheckDigit] != null;
+    final possibleFormats = hints?.possibleFormats;
+    final useCode39CheckDigit = hints?.assumeCode39CheckDigit ?? false;
     final readers = <OneDReader>[];
     if (possibleFormats != null) {
       if (possibleFormats.contains(BarcodeFormat.ean13) ||
@@ -92,7 +90,7 @@ class MultiFormatOneDReader extends OneDReader {
   Result decodeRow(
     int rowNumber,
     BitArray row,
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ) {
     for (OneDReader reader in _readers) {
       try {

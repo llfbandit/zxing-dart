@@ -31,7 +31,7 @@ void main() {
     SymbolInfo(false, 8, 10, 12, 12, 1),
     /*rect*/ SymbolInfo(true, 10, 11, 14, 6, 2),
     SymbolInfo(false, 13, 0, 0, 0, 1),
-    SymbolInfo(false, 77, 0, 0, 0, 1)
+    SymbolInfo(false, 77, 0, 0, 0, 1),
     //The last entries are fake entries to test special conditions with C40 encoding
   ];
 
@@ -549,6 +549,7 @@ void main() {
         '\u05D0\u05B7\u05D2\u05B8\u05BC\u05E1 (ag\u00E1s)',
       ),
     );
+    // TODO 2. 116 33 241 9 231 186 14 206 64 248 44 252 159 33 41 241 27 231 83
     expect(
       visualized,
       '239 209 151 206 214 92 122 140 35 158 144 162 52 205 55 171 137 23 67 206 218 175 147 113 15 254'

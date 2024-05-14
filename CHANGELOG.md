@@ -1,3 +1,20 @@
+## [1.1.2]
+* Sync zxing to 2023-12-25
+
+## [1.1.1]
+* fix tests
+
+## [1.1.0]
+* Sync zxing to 2023/9/7
+
+## [1.0.0]
+* refactor with dart language style
+
+Breakings:
+* encode hints: Map<EncodeHintType, dynamic> => EncodeHint
+* decode hints: Map<DecodeHintType, dynamic> => DecodeHint
+* oned.rss.expanded.decoders Case adjustment of some class names
+
 ## [0.9.0]
 * upgrade for dart3.0
 

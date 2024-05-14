@@ -21,7 +21,7 @@ import '../barcode_format.dart';
 import '../checksum_exception.dart';
 import '../common/bit_array.dart';
 import '../common/string_builder.dart';
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import '../formats_exception.dart';
 import '../not_found_exception.dart';
 import '../result.dart';
@@ -140,7 +140,7 @@ class Code128Reader extends OneDReader {
     [2, 1, 1, 4, 1, 2],
     [2, 1, 1, 2, 1, 4],
     [2, 1, 1, 2, 3, 2], // 105
-    [2, 3, 3, 1, 1, 1, 2]
+    [2, 3, 3, 1, 1, 1, 2],
   ];
 
   static const double _maxAvgVariance = 0.25;
@@ -245,10 +245,9 @@ class Code128Reader extends OneDReader {
   Result decodeRow(
     int rowNumber,
     BitArray row,
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ) {
-    final convertFNC1 =
-        hints != null && hints.containsKey(DecodeHintType.assumeGs1);
+    final convertFNC1 = hints?.assumeGs1 ?? false;
 
     int symbologyModifier = 0;
 
@@ -566,7 +565,7 @@ class Code128Reader extends OneDReader {
       rawBytes,
       [
         ResultPoint(left, rowNumber.toDouble()),
-        ResultPoint(right, rowNumber.toDouble())
+        ResultPoint(right, rowNumber.toDouble()),
       ],
       BarcodeFormat.code128,
     );

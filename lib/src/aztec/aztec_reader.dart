@@ -17,14 +17,13 @@
 import '../barcode_format.dart';
 import '../binary_bitmap.dart';
 import '../common/decoder_result.dart';
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import '../formats_exception.dart';
 import '../not_found_exception.dart';
 import '../reader.dart';
 import '../result.dart';
 import '../result_metadata_type.dart';
 import '../result_point.dart';
-import '../result_point_callback.dart';
 import 'decoder/decoder.dart';
 import 'detector/detector.dart';
 
@@ -33,15 +32,17 @@ import 'detector/detector.dart';
 /// @author David Olivier
 class AztecReader implements Reader {
   @override
-  Result decode(BinaryBitmap image, [Map<DecodeHintType, Object>? hints]) {
+  Result decode(BinaryBitmap image, [DecodeHint? hints]) {
     NotFoundException? notFoundException;
     FormatsException? formatException;
     final detector = Detector(image.blackMatrix);
     List<ResultPoint>? points;
     DecoderResult? decoderResult;
+    int errorsCorrected = 0;
     try {
       final detectorResult = detector.detect(false);
       points = detectorResult.points;
+      errorsCorrected = detectorResult.errorsCorrected;
       decoderResult = Decoder().decode(detectorResult);
     } on NotFoundException catch (e) {
       notFoundException = e;
@@ -52,6 +53,7 @@ class AztecReader implements Reader {
       try {
         final detectorResult = detector.detect(true);
         points = detectorResult.points;
+        errorsCorrected = detectorResult.errorsCorrected;
         decoderResult = Decoder().decode(detectorResult);
       } on NotFoundException catch (_) {
         if (notFoundException != null) {
@@ -67,8 +69,7 @@ class AztecReader implements Reader {
     }
 
     if (hints != null) {
-      final rpcb =
-          hints[DecodeHintType.needResultPointCallback] as ResultPointCallback?;
+      final rpcb = hints.needResultPointCallback;
       if (rpcb != null) {
         for (ResultPoint point in points!) {
           rpcb.foundPossibleResultPoint(point);
@@ -93,6 +94,8 @@ class AztecReader implements Reader {
     if (ecLevel != null) {
       result.putMetadata(ResultMetadataType.errorCorrectionLevel, ecLevel);
     }
+    errorsCorrected += decoderResult.errorsCorrected ?? 0;
+    result.putMetadata(ResultMetadataType.errorsCorrected, errorsCorrected);
     result.putMetadata(
       ResultMetadataType.symbologyIdentifier,
       ']z${decoderResult.symbologyModifier}',

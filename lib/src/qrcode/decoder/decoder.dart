@@ -22,7 +22,7 @@ import '../../common/decoder_result.dart';
 import '../../common/reedsolomon/reed_solomon_exception.dart';
 import '../../common/reedsolomon/generic_gf.dart';
 import '../../common/reedsolomon/reed_solomon_decoder.dart';
-import '../../decode_hint_type.dart';
+import '../../decode_hint.dart';
 import '../../formats_exception.dart';
 import 'bit_matrix_parser.dart';
 import 'data_block.dart';
@@ -48,7 +48,7 @@ class Decoder {
   /// @throws ChecksumException if error correction fails
   DecoderResult decode(
     List<List<bool>> image, [
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ]) {
     return decodeMatrix(BitMatrix.parse(image), hints);
   }
@@ -62,7 +62,7 @@ class Decoder {
   /// @throws ChecksumException if error correction fails
   DecoderResult decodeMatrix(
     BitMatrix bits, [
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ]) {
     // Construct a parser and read version, error-correction level
     final parser = BitMatrixParser(bits);
@@ -121,7 +121,7 @@ class Decoder {
 
   DecoderResult _decodeParser(
     BitMatrixParser parser, [
-    Map<DecodeHintType, Object>? hints,
+    DecodeHint? hints,
   ]) {
     final version = parser.readVersion();
     final ecLevel = parser.readFormatInformation().errorCorrectionLevel;
@@ -140,17 +140,19 @@ class Decoder {
     int resultOffset = 0;
 
     // Error-correct and copy data blocks together into a stream of bytes
+    int errorsCorrected = 0;
     for (DataBlock dataBlock in dataBlocks) {
       final codewordBytes = dataBlock.codewords;
       final numDataCodewords = dataBlock.numDataCodewords;
-      _correctErrors(codewordBytes, numDataCodewords);
+      errorsCorrected += _correctErrors(codewordBytes, numDataCodewords);
       for (int i = 0; i < numDataCodewords; i++) {
         resultBytes[resultOffset++] = codewordBytes[i];
       }
     }
 
     // Decode the contents of that stream of bytes
-    return DecodedBitStreamParser.decode(resultBytes, version, ecLevel, hints);
+    return DecodedBitStreamParser.decode(resultBytes, version, ecLevel, hints)
+      ..errorsCorrected = errorsCorrected;
   }
 
   /// <p>Given data and error-correction codewords received, possibly corrupted by errors, attempts to
@@ -158,16 +160,20 @@ class Decoder {
   ///
   /// @param codewordBytes data and error correction codewords
   /// @param numDataCodewords number of codewords that are data bytes
+  /// @return the number of errors corrected
   /// @throws ChecksumException if error correction fails
-  void _correctErrors(Uint8List codewordBytes, int numDataCodewords) {
+  int _correctErrors(Uint8List codewordBytes, int numDataCodewords) {
     final numCodewords = codewordBytes.length;
     // First read into an array of ints
     final codewordsInts = Int32List(numCodewords);
     for (int i = 0; i < numCodewords; i++) {
       codewordsInts[i] = codewordBytes[i];
     }
+
+    int errorsCorrected = 0;
     try {
-      _rsDecoder.decode(codewordsInts, codewordBytes.length - numDataCodewords);
+      errorsCorrected = _rsDecoder.decodeWithECCount(
+          codewordsInts, codewordBytes.length - numDataCodewords,);
     } on ReedSolomonException catch (_) {
       throw ChecksumException.getChecksumInstance();
     }
@@ -176,5 +182,6 @@ class Decoder {
     for (int i = 0; i < numDataCodewords; i++) {
       codewordBytes[i] = codewordsInts[i];
     }
+    return errorsCorrected;
   }
 }

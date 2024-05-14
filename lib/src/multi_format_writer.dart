@@ -18,16 +18,16 @@ import 'aztec/aztec_writer.dart';
 import 'barcode_format.dart';
 import 'common/bit_matrix.dart';
 import 'datamatrix/data_matrix_writer.dart';
-import 'encode_hint_type.dart';
+import 'encode_hint.dart';
 import 'oned/coda_bar_writer.dart';
 import 'oned/code128_writer.dart';
 import 'oned/code39_writer.dart';
 import 'oned/code93_writer.dart';
 import 'oned/ean13_writer.dart';
 import 'oned/ean8_writer.dart';
-import 'oned/itfwriter.dart';
-import 'oned/upcawriter.dart';
-import 'oned/upcewriter.dart';
+import 'oned/itf_writer.dart';
+import 'oned/upca_writer.dart';
+import 'oned/upce_writer.dart';
 import 'pdf417/pdf417_writer.dart';
 import 'qrcode/qrcode_writer.dart';
 import 'writer.dart';
@@ -43,7 +43,7 @@ class MultiFormatWriter implements Writer {
     BarcodeFormat format,
     int width,
     int height, [
-    Map<EncodeHintType, Object>? hints,
+    EncodeHint? hints,
   ]) {
     Writer writer;
     switch (format) {

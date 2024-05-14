@@ -74,6 +74,7 @@ void main() {
       aztec.isCompact,
       aztec.codeWords,
       aztec.layers,
+      0,
     );
     DecoderResult res = Decoder().decode(r);
     expect(
@@ -98,6 +99,7 @@ void main() {
       aztec.isCompact,
       aztec.codeWords,
       aztec.layers,
+      0,
     );
     res = Decoder().decode(r);
     expect(res.text, data);
@@ -111,14 +113,14 @@ void main() {
     int layers,
   ) {
     // Perform an encode-decode round-trip because it can be lossy.
-    final Map<EncodeHintType, Object> hints = {};
-    if (null != charset) {
-      hints[EncodeHintType.characterSet] = charset.name;
-    }
-    hints[EncodeHintType.errorCorrection] = eccPercent;
     final AztecWriter writer = AztecWriter();
-    final BitMatrix matrix =
-        writer.encode(data, BarcodeFormat.aztec, 0, 0, hints);
+    final BitMatrix matrix = writer.encode(
+      data,
+      BarcodeFormat.aztec,
+      0,
+      0,
+      EncodeHint(characterSet: charset?.name, errorCorrection: eccPercent),
+    );
     final AztecCode aztec =
         Encoder.encode(data, eccPercent, Encoder.defaultAztecLayers, charset);
     expect(
@@ -135,6 +137,7 @@ void main() {
       aztec.isCompact,
       aztec.codeWords,
       aztec.layers,
+      0,
     );
     DecoderResult res = Decoder().decode(r);
     expect(
@@ -160,6 +163,7 @@ void main() {
       aztec.isCompact,
       aztec.codeWords,
       aztec.layers,
+      0,
     );
     res = Decoder().decode(r);
     expect(res.text, data);
@@ -597,7 +601,7 @@ void main() {
     // places where the encoding changes: 31, 62, and 2047+31=2078
     for (int i in [
       1, 2, 3, 10, 29, 30, 31, 32, 33, 60, //
-      61, 62, 63, 64, 2076, 2077, 2078, 2079, 2080, 2100
+      61, 62, 63, 64, 2076, 2077, 2078, 2079, 2080, 2100,
     ]) {
       // This is the expected length of a binary string of length "i"
       final int expectedLength = (8 * i) +

@@ -19,7 +19,7 @@ import '../common/decoder_result.dart';
 
 import '../barcode_format.dart';
 import '../binary_bitmap.dart';
-import '../decode_hint_type.dart';
+import '../decode_hint.dart';
 import '../not_found_exception.dart';
 import '../reader.dart';
 import '../result.dart';
@@ -40,10 +40,10 @@ class QRCodeReader implements Reader {
   Decoder get decoder => _decoder;
 
   @override
-  Result decode(BinaryBitmap image, [Map<DecodeHintType, Object>? hints]) {
+  Result decode(BinaryBitmap image, [DecodeHint? hints]) {
     late DecoderResult decoderResult;
     late List<ResultPoint> points;
-    if (hints != null && hints.containsKey(DecodeHintType.pureBarcode)) {
+    if (hints?.pureBarcode == true) {
       final bits = _extractPureBits(image.blackMatrix);
       decoderResult = _decoder.decodeMatrix(bits, hints);
       points = _noPoints;
@@ -83,11 +83,15 @@ class QRCodeReader implements Reader {
         decoderResult.structuredAppendParity,
       );
     }
-    result.putMetadata(
-      ResultMetadataType.symbologyIdentifier,
-      ']Q${decoderResult.symbologyModifier}',
-    );
-    return result;
+    return result
+      ..putMetadata(
+        ResultMetadataType.symbologyIdentifier,
+        ']Q${decoderResult.symbologyModifier}',
+      )
+      ..putMetadata(
+        ResultMetadataType.errorsCorrected,
+        decoderResult.errorsCorrected ?? 0,
+      );
   }
 
   @override
